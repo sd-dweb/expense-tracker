@@ -15,45 +15,61 @@ const initialExpenses: Expense[] = [
     id: "EXP-1001",
     date: "2026-03-28",
     amount: 54.25,
-    currency: "USD",
+    currency: "PLN",
     description: "Groceries",
   },
   {
     id: "EXP-1002",
     date: "2026-03-29",
     amount: 18.0,
-    currency: "USD",
+    currency: "PLN",
     description: "Taxi",
   },
   {
     id: "EXP-1003",
     date: "2026-03-31",
     amount: 120.5,
-    currency: "USD",
+    currency: "PLN",
     description: "Utilities",
+  },
+  {
+    id: "EXP-1004",
+    date: "2026-04-01",
+    amount: 164.25,
+    currency: "PLN",
+    description: "Groceries",
   },
 ]
 
 export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     date: "",
     amount: "",
-    currency: "USD",
+    currency: "PLN",
     description: "",
   })
 
   const handleAddExpense = () => {
+    setEditingId(null)
+    setFormData({
+      date: "",
+      amount: "",
+      currency: "PLN",
+      description: "",
+    })
     setIsModalOpen(true)
   }
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
+    setEditingId(null)
     setFormData({
       date: "",
       amount: "",
-      currency: "USD",
+      currency: "PLN",
       description: "",
     })
   }
@@ -74,21 +90,48 @@ export default function Home() {
       return
     }
 
-    const newExpense: Expense = {
-      id: `EXP-${Date.now()}`,
-      date: formData.date,
-      amount: parseFloat(formData.amount),
-      currency: formData.currency,
-      description: formData.description,
+    if (editingId) {
+      // Update existing expense
+      setExpenses(
+        expenses.map((expense) =>
+          expense.id === editingId
+            ? {
+                ...expense,
+                date: formData.date,
+                amount: parseFloat(formData.amount),
+                currency: formData.currency,
+                description: formData.description,
+              }
+            : expense
+        )
+      )
+    } else {
+      // Add new expense
+      const newExpense: Expense = {
+        id: `EXP-${Date.now()}`,
+        date: formData.date,
+        amount: parseFloat(formData.amount),
+        currency: formData.currency,
+        description: formData.description,
+      }
+      setExpenses([...expenses, newExpense])
     }
 
-    setExpenses([...expenses, newExpense])
     handleCloseModal()
   }
 
   const handleEditExpense = (id: string) => {
-    console.log(`Edit expense with ID: ${id}`)
-    // TODO: Implement edit logic (e.g., open modal, navigate to edit form)
+    const expenseToEdit = expenses.find((expense) => expense.id === id)
+    if (expenseToEdit) {
+      setEditingId(id)
+      setFormData({
+        date: expenseToEdit.date,
+        amount: expenseToEdit.amount.toString(),
+        currency: expenseToEdit.currency,
+        description: expenseToEdit.description,
+      })
+      setIsModalOpen(true)
+    }
   }
 
   const handleDeleteExpense = (id: string) => {
@@ -161,11 +204,13 @@ export default function Home() {
         </table>
       </div>
 
-      {/* Add Expense Modal */}
+      {/* Add/Edit Expense Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-bold text-gray-900">Add Expense</h2>
+            <h2 className="mb-4 text-xl font-bold text-gray-900">
+              {editingId ? "Edit Expense" : "Add Expense"}
+            </h2>
 
             <form onSubmit={handleSubmitForm}>
               <div className="mb-4">
@@ -227,7 +272,7 @@ export default function Home() {
                   type="submit"
                   className="flex-1 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
                 >
-                  Add Expense
+                  {editingId ? "Update Expense" : "Add Expense"}
                 </button>
                 <button
                   type="button"
