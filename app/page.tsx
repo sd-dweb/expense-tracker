@@ -36,10 +36,54 @@ const initialExpenses: Expense[] = [
 
 export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [formData, setFormData] = useState({
+    date: "",
+    amount: "",
+    currency: "USD",
+    description: "",
+  })
 
   const handleAddExpense = () => {
-    console.log("Add Expense clicked")
-    // TODO: Implement add expense logic (e.g., open modal, navigate to form)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setFormData({
+      date: "",
+      amount: "",
+      currency: "USD",
+      description: "",
+    })
+  }
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.date || !formData.amount || !formData.description) {
+      alert("Please fill in all fields")
+      return
+    }
+
+    const newExpense: Expense = {
+      id: `EXP-${Date.now()}`,
+      date: formData.date,
+      amount: parseFloat(formData.amount),
+      currency: formData.currency,
+      description: formData.description,
+    }
+
+    setExpenses([...expenses, newExpense])
+    handleCloseModal()
   }
 
   const handleEditExpense = (id: string) => {
@@ -116,6 +160,87 @@ export default function Home() {
           </tbody>
         </table>
       </div>
+
+      {/* Add Expense Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-xl font-bold text-gray-900">Add Expense</h2>
+
+            <form onSubmit={handleSubmitForm}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Date</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleFormChange}
+                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Amount</label>
+                <input
+                  type="number"
+                  name="amount"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={formData.amount}
+                  onChange={handleFormChange}
+                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Currency</label>
+                <select
+                  name="currency"
+                  value={formData.currency}
+                  onChange={handleFormChange}
+                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+                >
+                  <option value="PLN">PLN</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="BYN">BYN</option>
+                </select>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  name="description"
+                  placeholder="Enter expense description"
+                  value={formData.description}
+                  onChange={handleFormChange}
+                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  className="flex-1 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+                >
+                  Add Expense
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
