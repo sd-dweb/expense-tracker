@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 type Expense = {
   id: string
@@ -51,6 +51,7 @@ export default function Home() {
     currency: "PLN",
     description: "",
   })
+  const total = useMemo(() => expenses.reduce((sum, expense) => sum + expense.amount, 0), [expenses])
 
   const handleAddExpense = () => {
     setEditingId(null)
@@ -202,6 +203,12 @@ export default function Home() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div>
+        <p className="mt-3 text-lg font-semibold text-indigo-200">
+          Total Amount: {total.toFixed(2)}
+        </p>
       </div>
 
       {/* Add/Edit Expense Modal */}
