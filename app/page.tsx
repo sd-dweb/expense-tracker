@@ -1,3 +1,7 @@
+"use client"
+
+import { useState } from "react"
+
 type Expense = {
   id: string
   date: string
@@ -6,7 +10,7 @@ type Expense = {
   description: string
 }
 
-const expenses: Expense[] = [
+const initialExpenses: Expense[] = [
   {
     id: "EXP-1001",
     date: "2026-03-28",
@@ -31,6 +35,23 @@ const expenses: Expense[] = [
 ]
 
 export default function Home() {
+  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses)
+
+  const handleAddExpense = () => {
+    console.log("Add Expense clicked")
+    // TODO: Implement add expense logic (e.g., open modal, navigate to form)
+  }
+
+  const handleEditExpense = (id: string) => {
+    console.log(`Edit expense with ID: ${id}`)
+    // TODO: Implement edit logic (e.g., open modal, navigate to edit form)
+  }
+
+  const handleDeleteExpense = (id: string) => {
+    console.log(`Delete expense with ID: ${id}`)
+    setExpenses(expenses.filter((expense) => expense.id !== id))
+  }
+
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-6 py-10">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -42,6 +63,7 @@ export default function Home() {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={handleAddExpense}
             className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
           >
             Add Expense
@@ -56,8 +78,8 @@ export default function Home() {
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">ID</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Date</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Description</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Amount</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Currency</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Amount</th>
               <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Actions</th>
             </tr>
           </thead>
@@ -67,20 +89,22 @@ export default function Home() {
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-800">{expense.id}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{expense.date}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{expense.description}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{expense.currency}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-900">
+                <td className="whitespace-nowrap px-4 py-3 text-left text-sm font-medium text-gray-900">
                   {expense.amount.toFixed(2)}
                 </td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{expense.currency}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-right">
                   <div className="inline-flex gap-2">
                     <button
                       type="button"
+                      onClick={() => handleEditExpense(expense.id)}
                       className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
                     >
                       Edit
                     </button>
                     <button
                       type="button"
+                      onClick={() => handleDeleteExpense(expense.id)}
                       className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500"
                     >
                       Delete
