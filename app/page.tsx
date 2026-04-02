@@ -88,8 +88,8 @@ export default function Home() {
   useEffect(() => {
     fetchRates()
     console.log("xxxx");
-    // Update rates every 5 minutes
-    const interval = setInterval(fetchRates, 10000)
+    // Update rates every 60 seconds
+    const interval = setInterval(fetchRates, 60000)
 
     return () => clearInterval(interval)
   }, [])
