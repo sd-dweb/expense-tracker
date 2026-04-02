@@ -52,11 +52,11 @@ export default function Home() {
   const amountUSD = useMemo(() => {
     if (!exchangeRates || !formData.amount || isNaN(parseFloat(formData.amount))) return 0
     const amount = parseFloat(formData.amount)
-    if (formData.currency === 'USD') return amount
-    if (formData.currency === 'PLN') return amount / exchangeRates.USD_PLN
-    if (formData.currency === 'EUR') return amount / exchangeRates.USD_EUR
-    if (formData.currency === 'BYN') return amount / exchangeRates.USD_BYN
-    return amount
+    let result = amount
+    if (formData.currency === 'PLN') result = amount / exchangeRates.USD_PLN
+    else if (formData.currency === 'EUR') result = amount / exchangeRates.USD_EUR
+    else if (formData.currency === 'BYN') result = amount / exchangeRates.USD_BYN
+    return Math.round(result * 100) / 100
   }, [formData.amount, formData.currency, exchangeRates])
 
   const fetchRates = async () => {
@@ -146,7 +146,7 @@ export default function Home() {
         amount: parseFloat(formData.amount),
         currency: formData.currency,
         description: formData.description,
-        amountUSD: amountUSD,
+        amountUSD: Math.round(amountUSD * 100) / 100,
       }
 
       const res = await fetch(url, {
