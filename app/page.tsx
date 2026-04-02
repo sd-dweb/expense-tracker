@@ -8,6 +8,7 @@ type Expense = {
   amount: number
   currency: string
   description: string
+  amountUSD?: number
 }
 
 type ExchangeRates = {
@@ -46,7 +47,17 @@ export default function Home() {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(null)
   const [ratesLoading, setRatesLoading] = useState(true)
   const [ratesError, setRatesError] = useState<string | null>(null)
-  const total = useMemo(() => expenses.reduce((sum, expense) => sum + expense.amount, 0), [expenses])
+  const total = useMemo(() => expenses.reduce((sum, expense) => sum + (expense.amountUSD || 0), 0), [expenses])
+
+  const amountUSD = useMemo(() => {
+    if (!exchangeRates || !formData.amount || isNaN(parseFloat(formData.amount))) return 0
+    const amount = parseFloat(formData.amount)
+    if (formData.currency === 'USD') return amount
+    if (formData.currency === 'PLN') return amount / exchangeRates.USD_PLN
+    if (formData.currency === 'EUR') return amount / exchangeRates.USD_EUR
+    if (formData.currency === 'BYN') return amount / exchangeRates.USD_BYN
+    return amount
+  }, [formData.amount, formData.currency, exchangeRates])
 
   const fetchRates = async () => {
     try {
@@ -86,7 +97,7 @@ export default function Home() {
   const handleAddExpense = () => {
     setEditingId(null)
     setFormData({
-      date: "",
+      date: new Date().toISOString().split('T')[0],
       amount: "",
       currency: "PLN",
       description: "",
@@ -121,6 +132,11 @@ export default function Home() {
       return
     }
 
+    if (!exchangeRates) {
+      alert("Exchange rates not loaded yet, please wait")
+      return
+    }
+
     try {
       const method = editingId ? 'PUT' : 'POST'
       const url = editingId ? `/api/expenses/${editingId}` : '/api/expenses'
@@ -130,6 +146,7 @@ export default function Home() {
         amount: parseFloat(formData.amount),
         currency: formData.currency,
         description: formData.description,
+        amountUSD: amountUSD,
       }
 
       const res = await fetch(url, {
@@ -208,6 +225,7 @@ export default function Home() {
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Description</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Amount</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Currency</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Amount USD</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Actions</th>
                 </tr>
               </thead>
@@ -221,6 +239,7 @@ export default function Home() {
                       {expense.amount.toFixed(2)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{expense.currency}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{(expense.amountUSD || 0).toFixed(2)}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
                       <div className="inline-flex gap-2">
                         <button
@@ -247,7 +266,7 @@ export default function Home() {
 
           <div>
             <p className="mt-3 text-lg font-semibold text-indigo-200">
-              Total Amount: {total.toFixed(2)}
+              Total Amount (USD): {total.toFixed(2)}
             </p>
           </div>
         </div>
@@ -343,7 +362,8 @@ export default function Home() {
                 <input
                   type="number"
                   name="amount"
-                  step="0.01"
+                  step="any"
+                  min="0"
                   placeholder="0.00"
                   value={formData.amount}
                   onChange={handleFormChange}
@@ -367,6 +387,14 @@ export default function Home() {
                   ))}
                 </select>
               </div>
+
+              {formData.amount && exchangeRates && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600">
+                    Equivalent in USD: {amountUSD.toFixed(2)}
+                  </p>
+                </div>
+              )}
 
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700">Description</label>
