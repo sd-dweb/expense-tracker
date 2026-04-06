@@ -13,7 +13,7 @@ async function fetchExchangeRates() {
       USD_EUR: usdData.rates.EUR,
       USD_BYN: plnData.rates.BYN / plnData.rates.USD,
     };
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch exchange rates');
   }
 }
@@ -56,7 +56,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
     }
     return NextResponse.json(updatedExpense);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update expense' }, { status: 500 });
   }
 }
@@ -69,7 +69,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
     }
     return NextResponse.json({ message: 'Expense deleted' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete expense' }, { status: 500 });
   }
 }

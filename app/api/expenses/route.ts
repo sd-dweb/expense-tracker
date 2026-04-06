@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectToDatabase from '@/app/lib/mongodb';  // Путь к вашему файлу
+import connectToDatabase from '@/app/lib/mongodb';
 import Expense from '@/app/models/Expense';
 
 async function fetchExchangeRates() {
@@ -13,7 +13,7 @@ async function fetchExchangeRates() {
       USD_EUR: usdData.rates.EUR,
       USD_BYN: plnData.rates.BYN / plnData.rates.USD,
     };
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch exchange rates');
   }
 }
@@ -23,7 +23,7 @@ export async function GET() {
     await connectToDatabase();
     const expenses = await Expense.find({});
     return NextResponse.json(expenses);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch expenses' }, { status: 500 });
   }
 }

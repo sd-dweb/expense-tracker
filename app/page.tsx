@@ -18,7 +18,6 @@ type ExchangeRates = {
   USD_BYN: number
 }
 
-const currencies = ['PLN', 'USD', 'EUR', 'BYN']
 
 export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>([])
