@@ -1,16 +1,17 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sign In',
-  description: 'Login in app.',
+  title: 'Create Account',
+  description: 'Register a new account.',
 }
 
-export default function LoginLayout({
+export default function RegisterLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return <>{children}</>
 }
+
 
 

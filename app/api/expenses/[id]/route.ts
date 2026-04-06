@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/app/lib/mongodb';
 import Expense from '@/app/models/Expense';
+import { auth } from '@/app/lib/auth';
 
 async function fetchExchangeRates() {
   try {
@@ -63,6 +64,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const session = await auth();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const deletedExpense = await Expense.findOneAndDelete({ id: params.id });
     if (!deletedExpense) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/app/lib/mongodb';
 import Expense from '@/app/models/Expense';
+import { auth } from '@/app/lib/auth';
 
 async function fetchExchangeRates() {
   try {
@@ -20,6 +21,9 @@ async function fetchExchangeRates() {
 
 export async function GET() {
   try {
+    const session = await auth();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const expenses = await Expense.find({});
     return NextResponse.json(expenses);
@@ -30,6 +34,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const body = await request.json();
     const { amount, currency, amountUSD: providedAmountUSD } = body;
