@@ -1,21 +1,57 @@
 import { redirect } from "next/navigation"
+import { signIn, auth } from "@/app/lib/auth"
+import { AuthError } from "next-auth"
 
-async function signIn() {
+async function loginAction(formData: FormData) {
   "use server"
-
-  redirect("/")
+  try {
+    await signIn("credentials", {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      redirectTo: "/",
+    })
+  } catch (error) {
+    if (error instanceof AuthError) {
+      redirect("/login?error=Invalid+email+or+password")
+    }
+    throw error
+  }
 }
 
-export default function Home() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: { error?: string; registered?: string }
+}) {
+  const session = await auth()
+  if (session) redirect("/")
+
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <section className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
         <h1 className="mb-2 text-3xl font-bold text-gray-900">Login</h1>
-        <p className="mb-6 text-sm text-gray-600">Sign in to continue to your expense tracker.</p>
+        <p className="mb-6 text-sm text-gray-600">
+          Sign in to continue to your expense tracker.
+        </p>
 
-        <form className="space-y-4" action={signIn}>
+        {searchParams.registered && (
+          <div className="mb-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700 border border-green-200">
+            Account created successfully! Please sign in.
+          </div>
+        )}
+
+        {searchParams.error && (
+          <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700 border border-red-200">
+            {searchParams.error}
+          </div>
+        )}
+
+        <form className="space-y-4" action={loginAction}>
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="email"
+              className="mb-1 block text-sm font-medium text-gray-700"
+            >
               Email
             </label>
             <input
@@ -30,7 +66,10 @@ export default function Home() {
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="mb-1 block text-sm font-medium text-gray-700"
+            >
               Password
             </label>
             <input
@@ -44,21 +83,6 @@ export default function Home() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <label htmlFor="remember" className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                id="remember"
-                name="remember"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              Remember me
-            </label>
-            <a href="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-              Forgot password?
-            </a>
-          </div>
-
           <button
             type="submit"
             className="w-full rounded-md bg-indigo-600 px-4 py-2 font-semibold text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -69,7 +93,10 @@ export default function Home() {
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Do not have an account?{" "}
-          <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <a
+            href="/register"
+            className="font-medium text-indigo-600 hover:text-indigo-500"
+          >
             Create one
           </a>
         </p>

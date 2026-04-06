@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState, useCallback } from "react"
+import { signOut } from "next-auth/react"
 import ExpenseForm from "./components/ExpenseForm"
 
 type Expense = {
@@ -200,6 +201,13 @@ export default function Home() {
             className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
           >
             Add Expense
+          </button>
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: '/login' })}
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Logout
           </button>
         </div>
       </div>
