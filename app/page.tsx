@@ -19,6 +19,7 @@ type ExchangeRates = {
   USD_BYN: number
 }
 
+const GRID_COLS = "grid-cols-[170px_105px_120px_120px_140px_1fr_140px]"
 
 export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -187,14 +188,14 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-7xl px-6 py-10">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+      {/* ── Header ── */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Expense Records</h1>
-          <p className="text-sm text-white">Manage your expense entries from the grid below.</p>
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">Expense Records</h1>
+          <p className="text-sm text-white/80">Manage your expense entries from the grid below.</p>
         </div>
-
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={handleAddExpense}
@@ -212,130 +213,168 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="flex gap-6">
-        {/* Expense Table */}
-        <div className="flex-1">
-          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Description</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Amount</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Currency</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Amount USD</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {expenses.map((expense) => (
-                  <tr key={expense.id} className="hover:bg-gray-50">
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-800">{expense.id}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{expense.date}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{expense.description}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-left text-sm font-medium text-gray-900">
-                      {expense.amount.toFixed(2)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{expense.currency}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">{(expense.amountUSD || 0).toFixed(2)}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right">
-                      <div className="inline-flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEditExpense(expense.id)}
-                          className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteExpense(expense.id)}
-                          className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* ── Expense Grid ── */}
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
 
-          <div>
-            <p className="mt-3 text-lg font-semibold text-indigo-200">
-              Total Amount (USD): {total.toFixed(2)}
-            </p>
-          </div>
-        </div>
+        {/* ── Desktop: single unified grid (header + all rows share column tracks) ── */}
+        <div className={`hidden sm:grid ${GRID_COLS}`}>
 
-        {/* Exchange Rates Sidebar */}
-        <div className="w-80">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold text-gray-900">Exchange Rates</h3>
-
-            {ratesLoading && (
-              <div className="flex items-center justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+          {/* Header cells — display:contents row */}
+          <div className="contents">
+            {["ID", "Date", "Amount", "Currency", "Amount USD", "Description", "Actions"].map((h, i) => (
+              <div
+                key={h}
+                className={`bg-gray-50 border-b border-gray-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 ${i === 6 ? "text-right" : "text-left border-r border-gray-200"}`}
+              >
+                {h}
               </div>
-            )}
+            ))}
+          </div>
 
-            {ratesError && (
-              <div className="rounded-md bg-red-50 p-4">
-                <p className="text-sm text-red-800">{ratesError}</p>
+          {/* Empty state spans all columns */}
+          {expenses.length === 0 && (
+            <div className="col-span-7 py-12 text-center text-sm text-gray-500">
+              No expenses yet. Click &ldquo;Add Expense&rdquo; to get started.
+            </div>
+          )}
+
+          {/* Data rows — display:contents so cells are direct grid children */}
+          {expenses.map((expense) => (
+            <div key={expense.id} className="contents group/row">
+              <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-800 truncate group-hover/row:bg-gray-50 transition-colors">{expense.id}</div>
+              <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-700 group-hover/row:bg-gray-50 transition-colors">{expense.date}</div>
+              <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm font-medium text-gray-900 group-hover/row:bg-gray-50 transition-colors">{expense.amount.toFixed(2)}</div>
+              <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-700 group-hover/row:bg-gray-50 transition-colors">{expense.currency}</div>
+              <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-700 group-hover/row:bg-gray-50 transition-colors">{(expense.amountUSD || 0).toFixed(2)}</div>
+              <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-700 group-hover/row:bg-gray-50 transition-colors">{expense.description}</div>
+              <div className="border-b border-gray-100 px-4 py-3 flex justify-end items-center gap-2 group-hover/row:bg-gray-50 transition-colors">
                 <button
-                  onClick={fetchRates}
-                  className="mt-2 text-sm text-red-600 hover:text-red-500"
+                  type="button"
+                  onClick={() => handleEditExpense(expense.id)}
+                  className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white"
                 >
-                  Try again
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteExpense(expense.id)}
+                  className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500"
+                >
+                  Delete
                 </button>
               </div>
-            )}
+            </div>
+          ))}
+        </div>
 
-            {exchangeRates && !ratesLoading && !ratesError && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">USD to PLN</p>
-                    <p className="text-xs text-gray-500">1 USD = {exchangeRates.USD_PLN.toFixed(4)} PLN</p>
+        {/* ── Mobile: card list ── */}
+        <div className="sm:hidden divide-y divide-gray-100">
+          {expenses.length === 0 && (
+            <p className="py-12 text-center text-sm text-gray-500">
+              No expenses yet. Click &ldquo;Add Expense&rdquo; to get started.
+            </p>
+          )}
+          {expenses.map((expense) => (
+            <div key={`m-${expense.id}`}>
+              {/* ── Mobile card ── */}
+              <div className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-mono text-gray-400 truncate">{expense.id}</p>
+                    <p className="text-sm font-semibold text-gray-900 leading-tight">{expense.description}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{expense.date}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-indigo-600">{exchangeRates.USD_PLN.toFixed(4)}</p>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-bold text-gray-900">
+                      {expense.amount.toFixed(2)}&nbsp;{expense.currency}
+                    </p>
+                    <p className="text-xs text-indigo-600 font-medium">
+                      ${(expense.amountUSD || 0).toFixed(2)} USD
+                    </p>
                   </div>
                 </div>
-
-                <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">EUR to USD</p>
-                    <p className="text-xs text-gray-500">1 USD = {exchangeRates.USD_EUR.toFixed(4)} EUR</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-indigo-600">{exchangeRates.USD_EUR.toFixed(4)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">USD to BYN</p>
-                    <p className="text-xs text-gray-500">1 USD = {exchangeRates.USD_BYN.toFixed(4)} BYN</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-indigo-600">{exchangeRates.USD_BYN.toFixed(4)}</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 text-xs text-gray-500">
-                  <p>Rates update every 5 minutes</p>
-                  <p>Source: exchangerate-api.com</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleEditExpense(expense.id)}
+                    className="flex-1 rounded-md border border-gray-300 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteExpense(expense.id)}
+                    className="flex-1 rounded-md bg-red-600 py-1.5 text-xs font-medium text-white hover:bg-red-500"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Add/Edit Expense Modal */}
+      {/* Total */}
+      <p className="mt-3 text-lg font-semibold text-indigo-200">
+        Total Amount (USD): {total.toFixed(2)}
+      </p>
+
+      {/* ── Exchange Rates (below grid) ── */}
+      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">Exchange Rates</h3>
+
+        {ratesLoading && (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+          </div>
+        )}
+
+        {ratesError && (
+          <div className="rounded-md bg-red-50 p-4">
+            <p className="text-sm text-red-800">{ratesError}</p>
+            <button onClick={fetchRates} className="mt-2 text-sm text-red-600 hover:text-red-500">
+              Try again
+            </button>
+          </div>
+        )}
+
+        {exchangeRates && !ratesLoading && !ratesError && (
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">USD to PLN</p>
+                  <p className="text-xs text-gray-500">1 USD = {exchangeRates.USD_PLN.toFixed(4)} PLN</p>
+                </div>
+                <p className="text-lg font-bold text-indigo-600">{exchangeRates.USD_PLN.toFixed(4)}</p>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">EUR to USD</p>
+                  <p className="text-xs text-gray-500">1 USD = {exchangeRates.USD_EUR.toFixed(4)} EUR</p>
+                </div>
+                <p className="text-lg font-bold text-indigo-600">{exchangeRates.USD_EUR.toFixed(4)}</p>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">USD to BYN</p>
+                  <p className="text-xs text-gray-500">1 USD = {exchangeRates.USD_BYN.toFixed(4)} BYN</p>
+                </div>
+                <p className="text-lg font-bold text-indigo-600">{exchangeRates.USD_BYN.toFixed(4)}</p>
+              </div>
+            </div>
+
+            <p className="mt-4 text-xs text-gray-500">
+              Rates refresh every minute &middot; Source: exchangerate-api.com
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* ── Modal ── */}
       <ExpenseForm
         isModalOpen={isModalOpen}
         editingId={editingId}

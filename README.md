@@ -4,10 +4,14 @@ A full-stack expense tracking app built with **Next.js 14**, **MongoDB**, and **
 
 ## Features
 
-- 📊 Track expenses in multiple currencies (USD, PLN, EUR, BYN)
+- 📊 Track expenses in multiple currencies
 - 💱 Live exchange rate conversion via exchangerate-api.com
 - 🔐 Credential-based authentication (register / login / logout)
 - 🐳 Docker-ready with standalone Next.js build
+
+---
+
+![Expense Tracker](public/reactjs-nextjs.png)
 
 ---
 
