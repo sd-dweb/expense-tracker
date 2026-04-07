@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react"
 import { signOut } from "next-auth/react"
+import { LogOut, Pencil, Trash2 } from "lucide-react"
 import ExpenseForm from "./components/ExpenseForm"
 
 type Expense = {
@@ -192,10 +193,9 @@ export default function Home() {
       {/* ── Header ── */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white sm:text-3xl">Expense Records</h1>
-          <p className="text-sm text-white/80">Manage your expense entries from the grid below.</p>
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">Expenses:</h1>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <button
             type="button"
             onClick={handleAddExpense}
@@ -206,8 +206,9 @@ export default function Home() {
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="ml-auto flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:ml-0"
           >
+            <LogOut className="h-4 w-4" />
             Logout
           </button>
         </div>
@@ -251,15 +252,17 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => handleEditExpense(expense.id)}
-                  className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white"
                 >
+                  <Pencil className="h-3 w-3" />
                   Edit
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDeleteExpense(expense.id)}
-                  className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500"
                 >
+                  <Trash2 className="h-3 w-3" />
                   Delete
                 </button>
               </div>
@@ -281,14 +284,14 @@ export default function Home() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[10px] font-mono text-gray-400 truncate">{expense.id}</p>
-                    <p className="text-sm font-semibold text-gray-900 leading-tight">{expense.description}</p>
+                    <p className="text-lg font-bold text-gray-900 leading-tight">{expense.description}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{expense.date}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-lg font-extrabold text-gray-900">
                       {expense.amount.toFixed(2)}&nbsp;{expense.currency}
                     </p>
-                    <p className="text-xs text-indigo-600 font-medium">
+                    <p className="text-sm font-semibold text-indigo-600">
                       ${(expense.amountUSD || 0).toFixed(2)} USD
                     </p>
                   </div>
@@ -297,15 +300,17 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => handleEditExpense(expense.id)}
-                    className="flex-1 rounded-md border border-gray-300 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-300 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
                   >
+                    <Pencil className="h-3 w-3" />
                     Edit
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDeleteExpense(expense.id)}
-                    className="flex-1 rounded-md bg-red-600 py-1.5 text-xs font-medium text-white hover:bg-red-500"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-red-600 py-1.5 text-xs font-medium text-white hover:bg-red-500"
                   >
+                    <Trash2 className="h-3 w-3" />
                     Delete
                   </button>
                 </div>
@@ -316,8 +321,8 @@ export default function Home() {
       </div>
 
       {/* Total */}
-      <p className="mt-3 text-lg font-semibold text-indigo-200">
-        Total Amount (USD): {total.toFixed(2)}
+      <p className="mt-3 mb-6 text-lg font-semibold text-indigo-200">
+        Total Amount: {total.toFixed(2)} $
       </p>
 
       {/* ── Exchange Rates (below grid) ── */}
