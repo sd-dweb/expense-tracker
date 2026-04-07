@@ -83,8 +83,10 @@ This script will:
 > ```
 > mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?appName=<AppName>
 > ```
-> Make sure your Atlas cluster allows inbound connections from `0.0.0.0/0`
-> (or set up [VPC peering](https://www.mongodb.com/docs/atlas/security-vpc-peering/)).
+> Configure your Atlas network access using an IP allowlist limited to your
+> Cloud Run egress IPs, or prefer private connectivity such as
+> [VPC peering](https://www.mongodb.com/docs/atlas/security-vpc-peering/).
+> Use `0.0.0.0/0` only as a temporary, last-resort troubleshooting step.
 
 ---
 
