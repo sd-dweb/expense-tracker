@@ -1,11 +1,5 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
-}
-
 interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -23,6 +17,16 @@ if (!global.mongoose) {
 }
 
 async function connectToDatabase() {
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) {
+    throw new Error(
+      'MONGODB_URI environment variable is not defined. ' +
+      'In development add it to .env.local; in production ensure the ' +
+      'Secret Manager secret "MONGODB_URI" exists and the Cloud Run ' +
+      'service account has the secretmanager.secretAccessor role.'
+    );
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
