@@ -60,6 +60,20 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --role="roles/cloudbuild.builds.builder" \
   --condition=None --quiet
 
+# Cloud Build SA: push images to Artifact Registry
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${CLOUDBUILD_SA}" \
+  --role="roles/artifactregistry.writer" \
+  --condition=None --quiet
+
+# Compute Engine SA: push images to Artifact Registry
+# Newer GCP projects route Artifact Registry push through the Compute SA,
+# not the Cloud Build SA — both must have this role.
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${COMPUTE_SA}" \
+  --role="roles/artifactregistry.writer" \
+  --condition=None --quiet
+
 # Cloud Build SA: deploy to Cloud Run
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:${CLOUDBUILD_SA}" \
@@ -72,6 +86,13 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:${COMPUTE_SA}" \
   --role="roles/storage.admin" \
+  --condition=None --quiet
+
+# Compute Engine SA: read secrets from Secret Manager at Cloud Run runtime
+# Without this, --set-secrets in deploy.sh silently fails → MONGODB_URI is undefined
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${COMPUTE_SA}" \
+  --role="roles/secretmanager.secretAccessor" \
   --condition=None --quiet
 
 info "IAM permissions configured."

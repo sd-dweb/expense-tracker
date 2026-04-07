@@ -7,6 +7,8 @@
 # Optional env overrides:
 #   GCP_PROJECT_ID, GCP_REGION, GCP_REPO_NAME, GCP_SERVICE_NAME
 #   IMAGE_TAG, MIN_INSTANCES, MAX_INSTANCES, CLOUD_RUN_MEMORY, CLOUD_RUN_CPU
+#   MONGODB_URI  — pass directly to skip Secret Manager lookup
+#                  e.g. MONGODB_URI="mongodb+srv://..." bash deployment/deploy.sh
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
@@ -28,6 +30,7 @@ MIN_INSTANCES="${MIN_INSTANCES:-0}"
 MAX_INSTANCES="${MAX_INSTANCES:-1}"
 MEMORY="${CLOUD_RUN_MEMORY:-512Mi}"
 CPU="${CLOUD_RUN_CPU:-1}"
+MONGODB_URI="${MONGODB_URI:-}"   # Optional: supply directly to bypass Secret Manager
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -68,9 +71,14 @@ info "Service   : ${SERVICE_NAME}"
 info "Image     : ${IMAGE_FULL}"
 info "Resources : ${MEMORY} RAM  |  ${CPU} vCPU"
 info "Instances : min=${MIN_INSTANCES}  max=${MAX_INSTANCES}"
+if [[ -n "${MONGODB_URI}" ]]; then
+  info "MONGODB_URI: supplied directly (bypassing Secret Manager)"
+else
+  info "MONGODB_URI: pulled from Secret Manager at runtime"
+fi
 echo ""
 
-read -rp "Proceed with deployment? [y/N] " confirm
+read -rp "Proceed with deployment? [Y/n] " confirm
 [[ "${confirm}" =~ ^[Yy]$ ]] || { warn "Deployment cancelled."; exit 0; }
 
 # ---------------------------------------------------------------------------
@@ -80,6 +88,43 @@ step "Step 1/4 - Configuring gcloud"
 gcloud config set project "${PROJECT_ID}"
 gcloud config set run/region "${REGION}"
 info "Active project: ${PROJECT_ID}  |  region: ${REGION}"
+
+# Ensure both Cloud Build SA and Compute Engine SA can push to Artifact Registry.
+# Newer GCP projects route Artifact Registry pushes through the Compute SA;
+# granting only the Cloud Build SA causes the uploadArtifacts permission error.
+PROJECT_NUMBER="$(gcloud projects describe "${PROJECT_ID}" --format='value(projectNumber)')"
+CLOUDBUILD_SA="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
+COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:${CLOUDBUILD_SA}" \
+  --role="roles/artifactregistry.writer" \
+  --condition=None --quiet 2>/dev/null || true
+
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:${COMPUTE_SA}" \
+  --role="roles/artifactregistry.writer" \
+  --condition=None --quiet 2>/dev/null || true
+
+info "Artifact Registry write permission confirmed for Cloud Build SA and Compute SA."
+
+# Ensure the Artifact Registry repository exists before trying to push.
+if ! gcloud artifacts repositories describe "${REPO_NAME}" \
+     --location="${REGION}" --project="${PROJECT_ID}" &>/dev/null 2>&1; then
+  info "Artifact Registry repo '${REPO_NAME}' not found — creating it now..."
+  gcloud artifacts repositories create "${REPO_NAME}" \
+    --repository-format=docker \
+    --location="${REGION}" \
+    --description="Docker repository for expense tracker" \
+    --project="${PROJECT_ID}"
+  info "Repository created."
+else
+  info "Artifact Registry repo '${REPO_NAME}' already exists."
+fi
+
+# Configure the local Docker credential helper so 'docker push' (if used outside
+# Cloud Build) authenticates correctly against Artifact Registry.
+gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
 # ---------------------------------------------------------------------------
 # Step 2 - Build and push image via Cloud Build
@@ -117,6 +162,19 @@ fi
 # ---------------------------------------------------------------------------
 step "Step 4/4 - Deploying to Cloud Run"
 
+# Build a single --set-secrets flag and an optional extra env-var for MONGODB_URI.
+# --set-secrets replaces ALL secret bindings, so AUTH_SECRET + MONGODB_URI (when
+# using Secret Manager) must be combined in one flag.
+if [[ -n "${MONGODB_URI}" ]]; then
+  SECRETS_FLAG="--set-secrets=AUTH_SECRET=AUTH_SECRET:latest"
+  MONGODB_ENV_FLAG="--set-env-vars=MONGODB_URI=${MONGODB_URI}"
+  info "Using MONGODB_URI supplied directly as env var."
+else
+  SECRETS_FLAG="--set-secrets=AUTH_SECRET=AUTH_SECRET:latest,MONGODB_URI=MONGODB_URI:latest"
+  MONGODB_ENV_FLAG=""
+  info "Using MONGODB_URI from Secret Manager."
+fi
+
 gcloud run deploy "${SERVICE_NAME}" \
   --image "${IMAGE_FULL}" \
   --region "${REGION}" \
@@ -126,11 +184,9 @@ gcloud run deploy "${SERVICE_NAME}" \
   --cpu "${CPU}" \
   --min-instances "${MIN_INSTANCES}" \
   --max-instances "${MAX_INSTANCES}" \
-  --set-secrets="MONGODB_URI=MONGODB_URI:latest" \
-  --set-secrets="AUTH_SECRET=AUTH_SECRET:latest" \
-  --set-env-vars="AUTH_URL=${AUTH_URL}" \
-  --set-env-vars="NEXT_PUBLIC_APP_NAME=Expense Tracker" \
-  --set-env-vars="NODE_ENV=production"
+  ${SECRETS_FLAG} \
+  ${MONGODB_ENV_FLAG} \
+  --set-env-vars="AUTH_URL=${AUTH_URL},AUTH_TRUST_HOST=true,NEXT_PUBLIC_APP_NAME=Expense Tracker,NODE_ENV=production"
 
 # ---------------------------------------------------------------------------
 # Retrieve final URL and patch AUTH_URL on first deploy
