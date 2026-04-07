@@ -149,6 +149,16 @@ middleware.ts                # Route protection
 
 ---
 
+## Deployment (Google Cloud Run)
+
+See **[deployment/README.md](deployment/README.md)** for the full guide, including:
+
+- One-time GCP project setup (`deployment/setup.sh`)
+- Building and deploying via Cloud Build + Cloud Run (`deployment/deploy.sh`)
+- How the Docker artifact is built (multi-stage `Dockerfile`) and launched (`node server.js`)
+
+---
+
 ## Authentication Flow
 
 1. Register at `/register` — creates a hashed-password account in MongoDB

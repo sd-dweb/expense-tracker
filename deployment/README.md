@@ -138,6 +138,79 @@ echo -n "new-value" | gcloud secrets versions add MONGODB_URI --data-file=-
 
 ---
 
+## How the Artifact Is Built & Launched
+
+### Multi-stage Docker build
+
+The `Dockerfile` at the project root uses three stages to produce a minimal, secure production image:
+
+| Stage | Base image | What it does |
+|-------|------------|--------------|
+| `deps` | `node:20-alpine` | Runs `npm ci` to install all dependencies into a clean layer |
+| `builder` | `node:20-alpine` | Copies the source + deps, then runs `npm run build` to produce the **Next.js standalone output** |
+| `runner` | `node:20-alpine` | Copies only the runtime-required files (no source, no full `node_modules`) and defines the start command |
+
+### The artifact: Next.js standalone build
+
+`next.config.mjs` sets `output: 'standalone'`, which tells Next.js to emit a self-contained production bundle at `.next/standalone` during `npm run build`. This bundle:
+
+- Contains `server.js` — a lightweight Node.js HTTP server (no `next start` or Next.js CLI needed at runtime)
+- Includes only the minimal `node_modules` subset required at runtime
+- Does **not** include static assets; those are copied separately
+
+The final Docker image is laid out as:
+
+```
+/app/
+├── server.js            ← Next.js standalone server entry point
+├── node_modules/        ← Minimal runtime dependency subset
+├── public/              ← Static public files (images, icons, etc.)
+└── .next/
+    └── static/          ← Compiled CSS / JS chunks, fonts, etc.
+```
+
+### How the artifact is launched
+
+When Cloud Run starts a container instance it executes the `CMD` defined in the `Dockerfile`:
+
+```dockerfile
+CMD ["node", "server.js"]
+```
+
+`server.js` is run directly by Node.js (no Next.js CLI involved). It:
+
+1. Reads `PORT` (set to `3000`) and `HOSTNAME` (set to `0.0.0.0`) from the environment
+2. Starts an HTTP server that handles all Next.js routing: SSR pages, API routes, and static assets
+3. Receives environment variables (`MONGODB_URI`, `AUTH_SECRET`, `AUTH_URL`) injected by Cloud Run from Secret Manager at container startup
+
+### End-to-end deployment flow
+
+```
+Developer → bash deployment/deploy.sh
+                │
+                ├─ Step 1 — gcloud project & region configured
+                │
+                ├─ Step 2 — Cloud Build
+                │     • Uploads source to GCS
+                │     • Builds Docker image (3-stage Dockerfile)
+                │         deps  → install node_modules
+                │         builder → npm run build (.next/standalone)
+                │         runner  → copy runtime files only
+                │     • Pushes image to Artifact Registry
+                │
+                ├─ Step 3 — Resolve AUTH_URL from existing Cloud Run service
+                │
+                └─ Step 4 — Cloud Run deploy
+                      • Pulls image from Artifact Registry
+                      • Injects secrets: MONGODB_URI, AUTH_SECRET (from Secret Manager)
+                      • Sets env vars: AUTH_URL, NODE_ENV=production, …
+                      • Starts container  →  node server.js  →  listens on :3000
+                      • Exposes public HTTPS endpoint
+                      • On first deploy: patches AUTH_URL with the real Cloud Run URL
+```
+
+---
+
 ## File Reference
 
 ```
