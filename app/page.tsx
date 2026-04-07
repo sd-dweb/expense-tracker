@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react"
 import { signOut } from "next-auth/react"
-import { LogOut, Pencil, Trash2 } from "lucide-react"
+import { LogOut, Pencil, Trash2, Plus } from "lucide-react"
 import ExpenseForm from "./components/ExpenseForm"
 
 type Expense = {
@@ -20,7 +20,7 @@ type ExchangeRates = {
   USD_BYN: number
 }
 
-const GRID_COLS = "grid-cols-[170px_105px_120px_120px_140px_1fr_140px]"
+const GRID_COLS = "grid-cols-[170px_105px_120px_120px_140px_1fr_180px]"
 
 export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -192,26 +192,25 @@ export default function Home() {
     <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
       {/* ── Header ── */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white sm:text-3xl">Expenses:</h1>
-        </div>
-        <div className="flex w-full items-center gap-2 sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">💰 Expenses:</h1>
           <button
             type="button"
             onClick={handleAddExpense}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+            className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
           >
+            <Plus className="h-4 w-4" />
             Add Expense
           </button>
-          <button
-            type="button"
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            className="ml-auto flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:ml-0"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
         </div>
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
       </div>
 
       {/* ── Expense Grid ── */}
@@ -326,8 +325,8 @@ export default function Home() {
       </p>
 
       {/* ── Exchange Rates (below grid) ── */}
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">Exchange Rates</h3>
+      <div className="mt-10 sm:mt-6 rounded-xl border border-gray-200 bg-white p-4 pt-2 pb-2 shadow-sm">
+        <h3 className="mb-2 text-lg font-semibold text-gray-900">Exchange Rates</h3>
 
         {ratesLoading && (
           <div className="flex items-center justify-center py-8">
@@ -346,29 +345,29 @@ export default function Home() {
 
         {exchangeRates && !ratesLoading && !ratesError && (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-2.5">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">USD to PLN</p>
-                  <p className="text-xs text-gray-500">1 USD = {exchangeRates.USD_PLN.toFixed(4)} PLN</p>
+                  <p className="text-xs font-medium text-gray-900">USD to PLN</p>
+                  <p className="text-[11px] text-gray-500">1 USD = {exchangeRates.USD_PLN.toFixed(4)} PLN</p>
                 </div>
-                <p className="text-lg font-bold text-indigo-600">{exchangeRates.USD_PLN.toFixed(4)}</p>
+                <p className="text-base font-bold text-indigo-600">{exchangeRates.USD_PLN.toFixed(4)}</p>
               </div>
 
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-2.5">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">EUR to USD</p>
-                  <p className="text-xs text-gray-500">1 USD = {exchangeRates.USD_EUR.toFixed(4)} EUR</p>
+                  <p className="text-xs font-medium text-gray-900">EUR to USD</p>
+                  <p className="text-[11px] text-gray-500">1 USD = {exchangeRates.USD_EUR.toFixed(4)} EUR</p>
                 </div>
-                <p className="text-lg font-bold text-indigo-600">{exchangeRates.USD_EUR.toFixed(4)}</p>
+                <p className="text-base font-bold text-indigo-600">{exchangeRates.USD_EUR.toFixed(4)}</p>
               </div>
 
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-2.5">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">USD to BYN</p>
-                  <p className="text-xs text-gray-500">1 USD = {exchangeRates.USD_BYN.toFixed(4)} BYN</p>
+                  <p className="text-xs font-medium text-gray-900">USD to BYN</p>
+                  <p className="text-[11px] text-gray-500">1 USD = {exchangeRates.USD_BYN.toFixed(4)} BYN</p>
                 </div>
-                <p className="text-lg font-bold text-indigo-600">{exchangeRates.USD_BYN.toFixed(4)}</p>
+                <p className="text-base font-bold text-indigo-600">{exchangeRates.USD_BYN.toFixed(4)}</p>
               </div>
             </div>
 
