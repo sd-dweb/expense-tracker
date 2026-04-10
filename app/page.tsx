@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState, useCallback } from "react"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { LogOut, Pencil, Trash2 } from "lucide-react"
 import ExpenseForm from "./components/ExpenseForm"
 
@@ -12,6 +12,7 @@ type Expense = {
   currency: string
   description: string
   amountUSD?: number
+  userName?: string
 }
 
 type ExchangeRates = {
@@ -20,9 +21,12 @@ type ExchangeRates = {
   USD_BYN: number
 }
 
-const GRID_COLS = "grid-cols-[170px_105px_120px_120px_140px_1fr_140px]"
+const GRID_COLS = "grid-cols-[170px_120px_105px_120px_120px_140px_1fr_180px]"
 
 export default function Home() {
+  const { data: session } = useSession()
+  const currentUser = session?.user?.name || session?.user?.email || 'Unknown'
+
   const [expenses, setExpenses] = useState<Expense[]>([])
   const loadExpenses = async () => {
     try {
@@ -222,10 +226,10 @@ export default function Home() {
 
           {/* Header cells — display:contents row */}
           <div className="contents">
-            {["ID", "Date", "Amount", "Currency", "Amount USD", "Description", "Actions"].map((h, i) => (
+            {["ID", "User", "Date", "Amount", "Currency", "Amount USD", "Description", "Actions"].map((h, i) => (
               <div
                 key={h}
-                className={`bg-gray-50 border-b border-gray-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 ${i === 6 ? "text-right" : "text-left border-r border-gray-200"}`}
+                className={`bg-gray-50 border-b border-gray-200 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 ${i === 7 ? "text-right" : "text-left border-r border-gray-200"}`}
               >
                 {h}
               </div>
@@ -234,7 +238,7 @@ export default function Home() {
 
           {/* Empty state spans all columns */}
           {expenses.length === 0 && (
-            <div className="col-span-7 py-12 text-center text-sm text-gray-500">
+            <div className="col-span-8 py-12 text-center text-sm text-gray-500">
               No expenses yet. Click &ldquo;Add Expense&rdquo; to get started.
             </div>
           )}
@@ -243,20 +247,23 @@ export default function Home() {
           {expenses.map((expense) => (
             <div key={expense.id} className="contents group/row">
               <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-800 truncate group-hover/row:bg-gray-50 transition-colors">{expense.id}</div>
+              <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-700 truncate group-hover/row:bg-gray-50 transition-colors">{expense.userName || '-'}</div>
               <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-700 group-hover/row:bg-gray-50 transition-colors">{expense.date}</div>
               <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm font-medium text-gray-900 group-hover/row:bg-gray-50 transition-colors">{expense.amount.toFixed(2)}</div>
               <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-700 group-hover/row:bg-gray-50 transition-colors">{expense.currency}</div>
               <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-700 group-hover/row:bg-gray-50 transition-colors">{(expense.amountUSD || 0).toFixed(2)}</div>
               <div className="border-b border-r border-gray-100 px-4 py-3 text-left text-sm text-gray-700 group-hover/row:bg-gray-50 transition-colors">{expense.description}</div>
               <div className="border-b border-gray-100 px-4 py-3 flex justify-end items-center gap-2 group-hover/row:bg-gray-50 transition-colors">
-                <button
-                  type="button"
-                  onClick={() => handleEditExpense(expense.id)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white"
-                >
-                  <Pencil className="h-3 w-3" />
-                  Edit
-                </button>
+                {expense.userName === currentUser && (
+                  <button
+                    type="button"
+                    onClick={() => handleEditExpense(expense.id)}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-white"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Edit
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => handleDeleteExpense(expense.id)}
@@ -285,7 +292,9 @@ export default function Home() {
                   <div className="min-w-0">
                     <p className="text-[10px] font-mono text-gray-400 truncate">{expense.id}</p>
                     <p className="text-lg font-bold text-gray-900 leading-tight">{expense.description}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{expense.date}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {expense.date} • {expense.userName || 'Unknown'}
+                    </p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-lg font-extrabold text-gray-900">
@@ -297,14 +306,16 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEditExpense(expense.id)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-300 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    <Pencil className="h-3 w-3" />
-                    Edit
-                  </button>
+                  {expense.userName === currentUser && (
+                    <button
+                      type="button"
+                      onClick={() => handleEditExpense(expense.id)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-300 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => handleDeleteExpense(expense.id)}

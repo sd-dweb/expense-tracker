@@ -7,6 +7,7 @@ export interface IExpense extends Document {
   currency: string;
   description: string;
   amountUSD: number;
+  userName?: string;
 }
 
 const ExpenseSchema: Schema = new Schema({
@@ -16,6 +17,7 @@ const ExpenseSchema: Schema = new Schema({
   currency: { type: String, required: true },
   description: { type: String, required: true },
   amountUSD: { type: Number, default: 0 },
+  userName: { type: String },
 });
 
 // Delete cached model to ensure schema changes are picked up

@@ -21,7 +21,21 @@ async function fetchExchangeRates() {
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const session = await auth();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
+    
+    // Authorization check
+    const existingExpense = await Expense.findOne({ id: params.id });
+    if (!existingExpense) {
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+    }
+    const currentUser = session.user?.name || session.user?.email || 'Unknown';
+    if (existingExpense.userName && existingExpense.userName !== currentUser) {
+      return NextResponse.json({ error: 'Forbidden: You can only edit your own expenses' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { amount, currency, amountUSD: providedAmountUSD } = body;
 
