@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Saving expense with amountUSD:', amountUSD, 'body:', JSON.stringify(body));
+    const userName = session.user?.name || session.user?.email || 'Unknown';
     const expenseData = {
       id: body.id,
       date: body.date,
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
       currency: body.currency,
       description: body.description,
       amountUSD: amountUSD,
+      userName: userName,
     };
     const newExpense = new Expense(expenseData);
     await newExpense.save();
