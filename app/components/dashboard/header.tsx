@@ -9,7 +9,7 @@ export default function Header() {
   const user = session?.user?.name || session?.user?.email || '';
 
   return (
-    <header className="flex items-center justify-between bg-sidebar px-6 py-4 shadow-md w-full flex-shrink-0">
+    <header className="flex items-center justify-between px-6 py-4 shadow-md w-full flex-shrink-0" style={{ backgroundColor: '#262e37' }}>
       <div className="flex items-center gap-6">
         <Link href="/dashboard" className="text-white font-bold text-xl tracking-tight whitespace-nowrap">
           💸 Expense Tracker

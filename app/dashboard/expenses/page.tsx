@@ -324,7 +324,7 @@ export default function Home() {
       </div>
 
       {/* Total */}
-      <p className="mt-3 mb-6 text-lg font-semibold text-indigo-200">
+      <p className="mt-4 mb-6 text-lg font-semibold text-gray-800">
         Total Amount: {total.toFixed(2)} $
       </p>
 

@@ -10,7 +10,11 @@ const links = [
 	{ name: 'Expenses', href: '/dashboard/expenses', icon: Receipt },
 ];
 
-export default function NavLinks() {
+type NavLinksProps = {
+	isCollapsed: boolean
+}
+
+export default function NavLinks({ isCollapsed }: NavLinksProps) {
 	const pathname = usePathname();
 	return (
 		<>
@@ -21,14 +25,15 @@ export default function NavLinks() {
 						key={link.name}
 						href={link.href}
 						className={clsx(
-              'flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-gray-500 p-3 text-sm font-medium text-gray-100 hover:bg-indigo-600 hover:text-white md:flex-none md:justify-start md:p-2 md:px-3 border border-gray-400',
+							'flex h-[48px] items-center justify-start gap-2 rounded-md bg-gray-500 p-2 px-3 text-sm font-medium text-gray-100 hover:bg-indigo-600 hover:text-white border border-gray-400 overflow-hidden transition-colors',
 							{
 								'bg-indigo-600 text-white border-indigo-500': pathname === link.href,
 							},
 						)}
+						title={isCollapsed ? link.name : ''}
 					>
-						<LinkIcon className="w-6" />
-						<p className="hidden md:block">{link.name}</p>
+						<LinkIcon className="w-6 shrink-0" />
+						{!isCollapsed && <p className="whitespace-nowrap">{link.name}</p>}
 					</Link>
 				);
 			})}

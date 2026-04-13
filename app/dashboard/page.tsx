@@ -81,7 +81,7 @@ export default async function Dashboard() {
       </div>
 
       <div className="w-full">
-        <h2 className="mb-4 text-xl font-semibold">Spending Over Time</h2>
+        <h2 className="mb-4 text-xl font-semibold" style={{ color: '#262e37' }}>Spending Over Time</h2>
         <div className="rounded-xl bg-white p-4 shadow-sm border border-gray-100 min-h-[400px]">
           {chartData.length > 0 ? (
             <ExpenseChart data={chartData} />
