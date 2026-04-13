@@ -73,6 +73,7 @@ export default function ExpenseForm({
                   name="amount"
                   step="any"
                   min="0"
+                  max="1000000"
                   placeholder="0.00"
                   value={formData.amount}
                   onChange={onFormChange}
